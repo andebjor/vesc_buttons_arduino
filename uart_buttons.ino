@@ -1,19 +1,26 @@
 #include "VescUart.h"
 
-static constexpr int pin_start = A4;
-static constexpr int pin_stop = A5;
+static constexpr int pin_left_hard = 7;
+static constexpr int pin_left_soft = 6;
+static constexpr int pin_right_soft = 5;
+static constexpr int pin_right_hard = 4;
 
+#if 0
 static int current = 0;
 static bool is_parked = true;
+#endif
 
 auto setup_io_pins() -> void
 {
-    pinMode(pin_start, INPUT);
-    pinMode(pin_stop, INPUT);
+    pinMode(pin_left_hard, INPUT_PULLUP);
+    pinMode(pin_left_soft, INPUT_PULLUP);
+    pinMode(pin_right_soft, INPUT_PULLUP);
+    pinMode(pin_right_hard, INPUT_PULLUP);
 
     pinMode(LED_BUILTIN, OUTPUT);
 }
 
+#if 0
 auto write_command() -> void
 {
     if (current >= 0)
@@ -35,6 +42,7 @@ auto park() -> void
     write_command();
     digitalWrite(LED_BUILTIN, LOW);
 }
+#endif
 
 void setup()
 {
@@ -43,9 +51,12 @@ void setup()
     Serial.begin(115200);
     while (!Serial) {};
 
+#if 0
     park();
+#endif
 }
 
+#if 0
 auto detect_stop() -> bool
 {
     return digitalRead(pin_stop);
@@ -140,18 +151,58 @@ auto run_demo() -> bool
     digitalWrite(LED_BUILTIN, LOW);
     return false;
 }
+#endif
+
+auto is_active(int pin) -> bool
+{
+    return !digitalRead(pin);
+}
 
 void loop()
 {
     while (1)
     {
+        digitalWrite(LED_BUILTIN, LOW);
         delay(10);
 
-        auto do_start = digitalRead(pin_start);
-
-        if (do_start)
         {
-            run_demo();
+            auto left_soft = is_active(pin_left_soft);
+            if (left_soft)
+            {
+                digitalWrite(LED_BUILTIN, HIGH);
+                Serial.println("Left soft");
+                continue;
+            }
+        }
+
+        {
+            auto right_soft = is_active(pin_right_soft);
+            if (right_soft)
+            {
+                digitalWrite(LED_BUILTIN, HIGH);
+                Serial.println("Right soft");
+                continue;
+            }
+        }
+
+        {
+            auto left_hard = is_active(pin_left_hard);
+            if (left_hard)
+            {
+                digitalWrite(LED_BUILTIN, HIGH);
+                Serial.println("Left hard");
+                continue;
+            }
+        }
+
+        {
+            auto right_hard = is_active(pin_right_hard);
+            if (right_hard)
+            {
+                digitalWrite(LED_BUILTIN, HIGH);
+                Serial.println("Right hard");
+                continue;
+            }
         }
     }
 }
