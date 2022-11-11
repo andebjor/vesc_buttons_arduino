@@ -5,10 +5,10 @@ static constexpr int pin_left_soft = 6;
 static constexpr int pin_right_soft = 5;
 static constexpr int pin_right_hard = 4;
 
-#if 0
+static constexpr int soft_current = 5;
+static constexpr int hard_current = 25;
+
 static int current = 0;
-static bool is_parked = true;
-#endif
 
 auto setup_io_pins() -> void
 {
@@ -20,9 +20,9 @@ auto setup_io_pins() -> void
     pinMode(LED_BUILTIN, OUTPUT);
 }
 
-#if 0
 auto write_command() -> void
 {
+#if 0
     if (current >= 0)
     {
         VescUartSetCurrent(current);
@@ -31,18 +31,10 @@ auto write_command() -> void
     {
         VescUartSetCurrentBrake(-current);
     }
-}
-
-auto park() -> void
-{
-    is_parked = true;
-
-    current = 0;
-
-    write_command();
-    digitalWrite(LED_BUILTIN, LOW);
-}
+#else
+    VescUartSetCurrent(current);
 #endif
+}
 
 void setup()
 {
@@ -50,108 +42,8 @@ void setup()
 
     Serial.begin(115200);
     while (!Serial) {};
-
-#if 0
-    park();
-#endif
 }
 
-#if 0
-auto detect_stop() -> bool
-{
-    return digitalRead(pin_stop);
-}
-
-#define detect_stop() \
-    if (detect_stop()) { \
-        park(); \
-        return true; \
-    }
-
-auto execute(int duration) -> bool
-{
-    write_command();
-    for (int i=0; i<duration; ++i)
-    {
-        detect_stop();
-        delay(100);
-        write_command();
-    }
-
-    return false;
-}
-
-auto rotate_right(int force, int duration) -> bool
-{
-    current = force;
-
-    return execute(duration);
-}
-
-auto rotate_left(int force, int duration) -> bool
-{
-    current = -force;
-
-    return execute(duration);
-}
-
-auto run_demo() -> bool
-{
-    digitalWrite(LED_BUILTIN, HIGH);
-
-    delay(500);
-    detect_stop();
-
-
-    if (rotate_right(3, 5*10))
-    {
-        return true;
-    }
-    if (rotate_left(3, 5*10))
-    {
-        return true;
-    }
-#if 0
-    if (rotate_left(1, 20))
-    {
-        return true;
-    }
-    if (rotate_right(4, 15))
-    {
-        return true;
-    }
-    if (rotate_right(0, 15))
-    {
-        return true;
-    }
-
-
-    if (rotate_left(4, 5))
-    {
-        return true;
-    }
-    if (rotate_left(1, 20))
-    {
-        return true;
-    }
-    if (rotate_right(4, 15))
-    {
-        return true;
-    }
-    if (rotate_right(0, 15))
-    {
-        return true;
-    }
-#endif
-
-    // stop rotation
-    park();
-    delay(1000);
-
-    digitalWrite(LED_BUILTIN, LOW);
-    return false;
-}
-#endif
 
 auto is_active(int pin) -> bool
 {
@@ -162,15 +54,16 @@ void loop()
 {
     while (1)
     {
-        digitalWrite(LED_BUILTIN, LOW);
         delay(10);
+/*         delay(500); */
 
         {
             auto left_soft = is_active(pin_left_soft);
             if (left_soft)
             {
                 digitalWrite(LED_BUILTIN, HIGH);
-                Serial.println("Left soft");
+                current = -soft_current;
+                write_command();
                 continue;
             }
         }
@@ -180,7 +73,8 @@ void loop()
             if (right_soft)
             {
                 digitalWrite(LED_BUILTIN, HIGH);
-                Serial.println("Right soft");
+                current = +soft_current;
+                write_command();
                 continue;
             }
         }
@@ -190,7 +84,8 @@ void loop()
             if (left_hard)
             {
                 digitalWrite(LED_BUILTIN, HIGH);
-                Serial.println("Left hard");
+                current = -hard_current;
+                write_command();
                 continue;
             }
         }
@@ -200,9 +95,15 @@ void loop()
             if (right_hard)
             {
                 digitalWrite(LED_BUILTIN, HIGH);
-                Serial.println("Right hard");
+                current = +hard_current;
+                write_command();
                 continue;
             }
         }
+
+        // if reach then no button is pressed: Set current to 0
+        digitalWrite(LED_BUILTIN, LOW);
+        current = 0;
+        write_command();
     }
 }
