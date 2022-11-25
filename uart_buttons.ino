@@ -5,8 +5,8 @@ static constexpr int pin_left_soft = 7;
 static constexpr int pin_right_soft = 6;
 static constexpr int pin_right_hard = 4;
 
-static constexpr int soft_current = 3;
-static constexpr int hard_current = 25;
+static constexpr int soft_current = 10;
+static constexpr int hard_current = 40;
 
 static int current = 0;
 
