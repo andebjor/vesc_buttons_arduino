@@ -1,11 +1,11 @@
 #include "VescUart.h"
 
-static constexpr int pin_left_hard = 7;
-static constexpr int pin_left_soft = 6;
-static constexpr int pin_right_soft = 5;
+static constexpr int pin_left_hard = 5;
+static constexpr int pin_left_soft = 7;
+static constexpr int pin_right_soft = 6;
 static constexpr int pin_right_hard = 4;
 
-static constexpr int soft_current = 5;
+static constexpr int soft_current = 3;
 static constexpr int hard_current = 25;
 
 static int current = 0;
